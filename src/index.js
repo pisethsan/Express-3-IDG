@@ -1,63 +1,71 @@
 import 'dotenv/config';
 
 import express from 'express';
-import bodyParser  from 'body-parser';
+import bodyParser from 'body-parser';
 import userRoute from './routes/user.route.js';
-import bookRoute from './routes/book.route.js';
 import teacherRoute from './routes/teacher.route.js';
-import moneyRoute from './routes/money.route.js';
 import stockRoute from './routes/stock.route.js';
+import { dbConnect } from './database/db.js';
 import courseRoute from './routes/course.route.js';
-import { authenticate, handleError } from './middlewares/index.js';
+import { authenticate, CacheInterceptor, cacheMiddleware, handleError, invalidateCache, limiter } from './middlewares/index.js';
 import morgan from 'morgan';
-import { dbConnect } from  './database/db.js';
 import cors from 'cors';
 import authRoute from './routes/auth.route.js';
+import redisClient from './redis/index.js';
 
-dbConnect().catch((err) => {
+
+await dbConnect().catch((err) => {
     console.log(err)
 })
+
+await redisClient.connect().catch((err) => {
+    console.log(err)
+})
+
 const app = express();
+app.use(cors())
 // POST & PATCH & PUT
 app.use(bodyParser.json())
 app.use(morgan('combined'))
-app.use(cors())
 
 
-/**
- * Exercise : Create 5 resources
- * GET /api/books
- * GET /api/books/{id}
- * DELETE /api/books/{id}
- * 
- * GET /api/users
- * GET /api/users/{id}
- * DELETE /api/users/{id}
- * PATCH /api/users/{id} 
- * POST /api/users/{id} - If ID already exist - Not allowed, throw 400
- * 
- * GET /api/teachers
- * GET /api/teachers/{id}
- * DELETE /api/teachers/{id}
- * GET /api/money
- * GET /api/money/{id}
- * DELETE /api/money/{id}
- * GET /api/stock
- * GET /api/stock/{id}
- * DELETE /api/stock/{id}
- */
+app.use('/api/users',
+    limiter(60 * 1000, 30), // 1 minute, 30 requests
+    authenticate,
+    cacheMiddleware,
+    CacheInterceptor(60 * 10),
+    invalidateCache,
+    userRoute);
+app.use('/api/teachers',
+    limiter(60 * 1000, 60), // 1 minute, 60ß requests
+    authenticate,
+    cacheMiddleware,
+    CacheInterceptor(60 * 10),
+    invalidateCache,
+    teacherRoute);
+app.use('/api/stocks',
+    limiter(60 * 1000, 30), // 1 minute, 30 requests
+    authenticate,
+    cacheMiddleware,
+    CacheInterceptor(60 * 10),
+    invalidateCache,
+    stockRoute);
+app.use('/api/courses',
+    limiter(60 * 1000, 30), // 1 minute, 30 requests
+    authenticate,
+    cacheMiddleware,
+    CacheInterceptor(60 * 10),
+    invalidateCache,
+    courseRoute);
 
-app.use('/api/users', authenticate, userRoute);
-app.use('/api/books', authenticate, bookRoute);
-app.use('/api/teachers', authenticate, teacherRoute);
-app.use('/api/money', authenticate, moneyRoute);
-app.use('/api/stocks', authenticate, stockRoute);
-app.use('/api/courses', authenticate, courseRoute);
-app.use('/api/auth', authRoute);
+// Auth
+app.use('/api/auth',
+    limiter(60 * 60 * 1000, 3), // 1 hour, 3 requests
+    authRoute);
 
 // Error handler
 app.use(handleError)
-//Server
+
 app.listen(3000, () => {
-    console.log('Server running on port 3000');
+    console.log('Server runing on port 3000');
 })

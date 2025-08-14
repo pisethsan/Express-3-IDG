@@ -1,7 +1,18 @@
 import { courseModel } from '../models/course.model.js';
 import asyncHandler from 'express-async-handler'
+import redisClient from '../redis/index.js';
+/**
+ * /api/stock?maxQuantity=20&minQuantity=10
+ */
+export const getAllCourses = asyncHandler(async (req, res) => {
+    console.log('Fetching all courses');
+    // const courseCacheKey = 'courses';
 
-export const getAllCourses = asyncHandler (async (req, res) => {
+    // const cacheCourses = await redisClient.get(courseCacheKey)
+
+    // if (cacheCourses) {
+    //     return res.json(JSON.parse(cacheCourses));
+    // }
     const limit = req.query.limit || 10
     const page = req.query.page || 1
     const populate = req.query.populate || ''

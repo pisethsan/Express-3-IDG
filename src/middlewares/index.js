@@ -2,6 +2,19 @@ import { validationResult } from 'express-validator'
 import jwt from 'jsonwebtoken'
 import asyncHandler from 'express-async-handler'
 import { userModel } from '../models/user.model.js';
+import redisClient from '../redis/index.js';
+import { responseHandler } from 'express-intercept';
+import rateLimit from 'express-rate-limit';
+import { RedisStore } from 'rate-limit-redis'
+
+export const limiter = (ttl, request) => rateLimit({
+    windowMs: ttl, // 1 minute
+    max: request, // Limit each IP to 30 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.',
+    store: new RedisStore({
+        sendCommand: (...args) => redisClient.sendCommand(args),
+    })
+});
 
 //User
 export function userMiddleware(req, res, next) {
@@ -118,3 +131,43 @@ export const authenticate = asyncHandler(async (req, res, next) => {
     req.user = user
     next()
 })
+
+
+// Cache Interceptor
+export const CacheInterceptor = (ttl) => responseHandler()
+    .for((req) => req.method == 'GET')
+    .if((res) => {
+        const codes = [200, 201, 202, 203, 204]
+        return codes.includes(res.statusCode);
+    }).getString(async (body, req, res) => {
+        const { originalUrl } = res.req
+        await redisClient.set(originalUrl, body, {
+            EX: ttl // Cache for ttl seconds
+        })
+    })
+
+export const cacheMiddleware = asyncHandler(async (req, res, next) => {
+    const { originalUrl } = req
+    if (req.method == 'GET') {
+        const data = await redisClient.get(originalUrl)
+        if (data !== null) {
+            return res.json(JSON.parse(data))
+        }
+    }
+    next()
+})
+
+export const invalidateCache = responseHandler().for(
+    (req) => {
+        const methods = ['POST', 'PUT', 'DELETE', 'PATCH']
+        return methods.includes(req.method);
+    }).if((res) => {
+        const codes = [201, 204, 203]
+        return codes.includes(res.statusCode);
+    }).getString(async (body, req, res) => {
+        const { baseUrl } = req
+        const keys = await redisClient.keys(`${baseUrl}*`)
+        for (const key of keys) {
+            await redisClient.del(key)
+        }
+    })

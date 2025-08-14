@@ -59,7 +59,6 @@ for (let i = 0; i < numberOfUsers; i++) {
         name: faker.person.fullName(),
         username: faker.internet.userName().toLowerCase() + faker.string.alphanumeric(5),
         email: faker.internet.email(),
-        password: faker.internet.password(),
         age: faker.number.int({ min: 18, max: 70 }),
         role: faker.helpers.arrayElement(['member', 'admin', 'editor'])
     });
