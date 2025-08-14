@@ -5,49 +5,38 @@ import redisClient from '../redis/index.js';
  * /api/stock?maxQuantity=20&minQuantity=10
  */
 export const getAllCourses = asyncHandler(async (req, res) => {
-    console.log('Fetching all courses');
-    // const courseCacheKey = 'courses';
-
-    // const cacheCourses = await redisClient.get(courseCacheKey)
-
-    // if (cacheCourses) {
-    //     return res.json(JSON.parse(cacheCourses));
-    // }
     const limit = req.query.limit || 10
     const page = req.query.page || 1
     const populate = req.query.populate || ''
     const options = {
         page,
         limit,
-        populate
+        populate,
     };
-    let filterCourse = await courseModel.paginate({}, options)
-    return res.json(filterCourse)
-})
+    const courses = await courseModel.paginate({}, options);
+    return res.status(200).json(courses);
+});
 
-export const getCourseById = asyncHandler (async (req, res) => {
+export const getCourseById = asyncHandler(async (req, res) => {
     const id = req.params.id;
-    const user = await courseModel.findById(id)
-    if (!user) {
-        return res.json({ messsge: "Not Found" })
-    }
-    return res.json(user)
+    const stock = await courseModel.findById(id)
+    return res.json(stock)
 })
 
-export const deleteCourseById = asyncHandler( async (req, res) => {
-    const userId = req.params.id
-    const result = await courseModel.deleteOne({ _id: userId })
-    return res.json({ message: result })
+export const deleteCourseyId = asyncHandler(async (req, res) => {
+    const id = req.params.id
+    const deleted = await courseModel.deleteOne({ _id: id })
+    return res.status(204).json({ message: 'deleted', data: deleted })
 })
 
-export const updateCourseById = asyncHandler (async (req, res) => {
+export const updateCourseById = asyncHandler(async (req, res) => {
     const userId = req.params.id
     const result = await courseModel.updateOne({ _id: userId }, req.body)
     return res.status(200).json({ message: 'updated', data: result })
 })
 
-export const createCourse = asyncHandler (async (req, res) => {
-    const user = new courseModel(req.body)
-    await user.save()
-    return res.status(201).json(user)
+export const createCourse = asyncHandler(async (req, res) => {
+    const course = new courseModel(req.body)
+    await course.save()
+    return res.status(201).json(course)
 })

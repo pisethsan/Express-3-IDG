@@ -12,6 +12,7 @@ import morgan from 'morgan';
 import cors from 'cors';
 import authRoute from './routes/auth.route.js';
 import redisClient from './redis/index.js';
+import fileRoute from './routes/file.route.js';
 
 
 await dbConnect().catch((err) => {
@@ -58,6 +59,9 @@ app.use('/api/courses',
     invalidateCache,
     courseRoute);
 
+
+
+app.use('/api/files', fileRoute);
 // Auth
 app.use('/api/auth',
     limiter(60 * 60 * 1000, 3), // 1 hour, 3 requests
