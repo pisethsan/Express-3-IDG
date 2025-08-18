@@ -31,28 +31,28 @@ app.use(morgan('combined'))
 
 
 app.use('/api/users',
-    limiter(60 * 1000, 30), // 1 minute, 30 requests
+    // limiter(60 * 1000, 30), // 1 minute, 30 requests
     authenticate,
     cacheMiddleware,
     CacheInterceptor(60 * 10),
     invalidateCache,
     userRoute);
 app.use('/api/teachers',
-    limiter(60 * 1000, 60), // 1 minute, 60ß requests
+    // limiter(60 * 1000, 60), // 1 minute, 60ß requests
     authenticate,
     cacheMiddleware,
     CacheInterceptor(60 * 10),
     invalidateCache,
     teacherRoute);
 app.use('/api/stocks',
-    limiter(60 * 1000, 30), // 1 minute, 30 requests
+    // limiter(60 * 1000, 30), // 1 minute, 30 requests
     authenticate,
     cacheMiddleware,
     CacheInterceptor(60 * 10),
     invalidateCache,
     stockRoute);
 app.use('/api/courses',
-    limiter(60 * 1000, 30), // 1 minute, 30 requests
+    // limiter(60 * 1000, 30), // 1 minute, 30 requests
     authenticate,
     cacheMiddleware,
     CacheInterceptor(60 * 10),
@@ -64,7 +64,7 @@ app.use('/api/courses',
 app.use('/api/files', fileRoute);
 // Auth
 app.use('/api/auth',
-    limiter(60 * 60 * 1000, 3), // 1 hour, 3 requests
+    // limiter(60 * 60 * 1000, 3), // 1 hour, 3 requests
     authRoute);
 
 // Error handler

@@ -23,7 +23,7 @@ export const getCourseById = asyncHandler(async (req, res) => {
     return res.json(stock)
 })
 
-export const deleteCourseyId = asyncHandler(async (req, res) => {
+export const deleteCourseById = asyncHandler(async (req, res) => {
     const id = req.params.id
     const deleted = await courseModel.deleteOne({ _id: id })
     return res.status(204).json({ message: 'deleted', data: deleted })
