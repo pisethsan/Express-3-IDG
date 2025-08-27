@@ -8,11 +8,11 @@ export const login = asyncHandler(async (req, res) => {
     const { username, password } = req.body
     const user = await userModel.findOne({ username: username })
     if (!user) {
-        return res.json({ message: "User not found!" })
+        return res.status(404).json({ message: "User not found!" })
     }
     const isMatched = bcrypt.compare(password, user.password)
     if (!isMatched) {
-        return res.json({ message: "Username or Password Incorrect!" })
+        return res.status(401).json({ message: "Username or Password Incorrect!" })
     }
     // JWT
     const payload = {

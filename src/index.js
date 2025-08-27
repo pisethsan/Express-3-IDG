@@ -29,6 +29,9 @@ app.use(cors())
 app.use(bodyParser.json())
 app.use(morgan('combined'))
 
+app.get('/', (req, res) => {
+    return res.status(200).json({ 'status': "Server is running" })
+})
 
 app.use('/api/users',
     // limiter(60 * 1000, 30), // 1 minute, 30 requests
@@ -71,5 +74,5 @@ app.use('/api/auth',
 app.use(handleError)
 
 app.listen(3000, () => {
-    console.log('Server runing on port 3000');
+    console.log('Server running on port 3000');
 })

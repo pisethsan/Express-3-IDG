@@ -4,9 +4,9 @@ import { teacherModel } from "../models/teacher.model.js";
 export const createTeacherValidator = checkSchema({
     name: {
         matches: {
-            options: [/^[A-Za-z\s]+$/]
+            options: [/^[A-Za-z\s'.]+$/]
         },
-        errorMessage: "Only letters and space allowed",
+        errorMessage: "Only letters, spaces, apostrophes, and periods are allowed",
         custom: {
             options: async (value) => {
                 const teacher = await teacherModel.findOne({ name: value })
@@ -25,9 +25,12 @@ export const createTeacherValidator = checkSchema({
         errorMessage: "Minimum years of experience is 1, and maximum is 50"
     },
     subject: {
-        isIn: {
-            options: [["Math", "English", "Khmer"]]
-        },
-        errorMessage: "Subject must be among Math, English, Khmer"
+        isString: true,
     }
+    // subject: {
+    //     isIn: {
+    //         options: [["Math", "English", "Khmer"]]
+    //     },
+    //     errorMessage: "Subject must be among Math, English, Khmer"
+    // }
 })

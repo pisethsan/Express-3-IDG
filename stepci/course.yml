@@ -1,0 +1,98 @@
+version: "1.1"
+name: Create Courses
+env:
+  host: localhost:3000
+  TOKEN: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2ODk0NTRiMzgwMGQwZDg0YTA0NTg3NGYiLCJ1c2VybmFtZSI6ImtpbWFuZyIsInJvbGUiOiJBZG1pbiIsImlhdCI6MTc1NTg0NjQ1OCwiZXhwIjoxNzU1ODg5NjU4fQ.PQ9kbejU4QE_bWc2pu18ScH9ApYeHxN2bse6OKjsk8k"
+config:
+  loadTest:
+    phases:
+      - duration: 2
+        arrivalRate: 20 # Requests per 1 second, 2 request
+      - duration: 10
+        arrivalRate: 2 # 2 requests per 1 second, 20 requests
+tests:
+  create-course:
+    testdata:
+      file: test.csv
+    steps:
+      - name: Login
+        http:
+          url: http://${{env.host}}/api/auth/login
+          method: POST
+          check:
+            status: /^20/
+          json:
+            username: ${{testdata.username}}
+            password: ${{testdata.password}}
+          captures:
+            accessToken:
+              jsonpath: $.accessToken
+      - name: POST course
+        http:
+          url: http://${{env.host}}/api/courses
+          method: POST
+          auth:
+            bearer:
+              token: ${{captures.accessToken}}
+          json:
+            title: ${{ commerce.productName | fake }}
+            credit: "${{ number.int | fake: {min: 1, max: 10} }}"
+            description: ${{ lorem.sentence | fake }}
+            # The value for teacherId from test.csv was empty, causing the test to fail.
+            taughtBy: ["689454b3800d0d84a045874f"]
+          check:
+            status: /^20/
+  create-course-fail:
+    testdata:
+      file: test.csv
+    steps:
+      - name: Login
+        http:
+          url: http://${{env.host}}/api/auth/login
+          method: POST
+          check:
+            status: /^20/
+          json:
+            username: ${{testdata.username}}
+            password: ${{testdata.password}}
+          captures:
+            accessToken:
+              jsonpath: $.accessToken
+      - name: POST course bad data
+        http:
+          url: http://${{env.host}}/api/courses
+          method: POST
+          auth:
+            bearer:
+              token: ${{captures.accessToken}}
+          json:
+            title: ${{ number.int | fake }}
+            credit: "twenty"
+            description: ""
+          check:
+            status: /^40/
+  create-course-no-body:
+    testdata:
+      file: test.csv
+    steps:
+      - name: Login
+        http:
+          url: http://${{env.host}}/api/auth/login
+          method: POST
+          check:
+            status: /^20/
+          json:
+            username: ${{testdata.username}}
+            password: ${{testdata.password}}
+          captures:
+            accessToken:
+              jsonpath: $.accessToken
+      - name: POST course no body
+        http:
+          url: http://${{env.host}}/api/courses
+          method: POST
+          auth:
+            bearer:
+              token: ${{captures.accessToken}}
+          check:
+            status: /^40/
