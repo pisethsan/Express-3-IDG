@@ -13,6 +13,7 @@ import cors from 'cors';
 import authRoute from './routes/auth.route.js';
 import redisClient from './redis/index.js';
 import fileRoute from './routes/file.route.js';
+import { profileImage } from './models/user.model.js';
 
 
 await dbConnect().catch((err) => {
@@ -35,7 +36,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/users',
     // limiter(60 * 1000, 30), // 1 minute, 30 requests
-    authenticate,
+    // authenticate,
     cacheMiddleware,
     CacheInterceptor(60 * 10),
     invalidateCache,
@@ -63,7 +64,7 @@ app.use('/api/courses',
     courseRoute);
 
 
-
+app.use('/api/profile-image', profileImage);
 app.use('/api/files', fileRoute);
 // Auth
 app.use('/api/auth',

@@ -1,5 +1,15 @@
 import mongoose from "mongoose";
 import mongoosePaginate from 'mongoose-paginate-v2';
+
+const profileImageSchema = new mongoose.Schema({
+    path: { type: String, required: true },
+    filename: { type: String, required: true },
+    mimetype: { type: String, required: true },
+    size: { type: Number },
+}, { timestamps: true });
+
+export const profileImage = mongoose.model('ProfileImage', profileImageSchema);
+
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -12,11 +22,12 @@ const userSchema = new mongoose.Schema({
     },
     email: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     age: {
         type: Number,
-        required: true
+        // It's better to not have age as a required field
     },
     role: {
         type: String,
@@ -26,13 +37,18 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true
-    }
+    },
+    profileImage: [
+            { type: mongoose.Types.ObjectId, ref: 'ProfileImage' }
+        ]
+    }, {
+        timestamps: true
 })
 
 userSchema.plugin(mongoosePaginate)
 
 
-export const userModel = mongoose.model('Users', userSchema)
+export const userModel = mongoose.model('User', userSchema)
 
 
 // const users = [
