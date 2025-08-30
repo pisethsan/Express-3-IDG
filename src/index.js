@@ -13,8 +13,7 @@ import cors from 'cors';
 import authRoute from './routes/auth.route.js';
 import redisClient from './redis/index.js';
 import fileRoute from './routes/file.route.js';
-import { profileImage } from './models/user.model.js';
-
+import { serveSwagger, setupSwagger } from './config/swagger.js';
 
 await dbConnect().catch((err) => {
     console.log(err)
@@ -30,6 +29,9 @@ app.use(cors())
 app.use(bodyParser.json())
 app.use(morgan('combined'))
 
+app.use('/docs', serveSwagger, setupSwagger);
+
+
 app.get('/', (req, res) => {
     return res.status(200).json({ 'status': "Server is running" })
 })
@@ -42,29 +44,29 @@ app.use('/api/users',
     invalidateCache,
     userRoute);
 app.use('/api/teachers',
-    // limiter(60 * 1000, 60), // 1 minute, 60ß requests
-    authenticate,
+    // limiter(60 * 1000, 60), // 1 minute, 60 requests
+    // authenticate,
     cacheMiddleware,
     CacheInterceptor(60 * 10),
     invalidateCache,
     teacherRoute);
 app.use('/api/stocks',
     // limiter(60 * 1000, 30), // 1 minute, 30 requests
-    authenticate,
+    // authenticate,
     cacheMiddleware,
     CacheInterceptor(60 * 10),
     invalidateCache,
     stockRoute);
 app.use('/api/courses',
     // limiter(60 * 1000, 30), // 1 minute, 30 requests
-    authenticate,
+    // authenticate,
     cacheMiddleware,
     CacheInterceptor(60 * 10),
     invalidateCache,
     courseRoute);
 
 
-app.use('/api/profile-image', profileImage);
+
 app.use('/api/files', fileRoute);
 // Auth
 app.use('/api/auth',
