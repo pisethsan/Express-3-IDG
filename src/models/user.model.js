@@ -1,14 +1,6 @@
 import mongoose from "mongoose";
 import mongoosePaginate from 'mongoose-paginate-v2';
 
-const profileImageSchema = new mongoose.Schema({
-    path: { type: String, required: true },
-    filename: { type: String, required: true },
-    mimetype: { type: String, required: true },
-    size: { type: Number },
-}, { timestamps: true });
-
-export const profileImage = mongoose.model('ProfileImage', profileImageSchema);
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -38,9 +30,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    profileImage: [
-            { type: mongoose.Types.ObjectId, ref: 'ProfileImage' }
-        ]
+    avatar: {
+        type: String
+    }
     }, {
         timestamps: true
 })

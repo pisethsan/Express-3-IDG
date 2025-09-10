@@ -1,5 +1,6 @@
 import express from 'express';
 import { login, signUp } from '../controllers/auth.controller.js';
+import { upload } from '../middlewares/multer.js';
 
 const authRoute = express.Router();
 
@@ -66,6 +67,6 @@ authRoute.post('/login', login)
  *       401:
  *         description: Invalid credentials
  */
-authRoute.post('/sign-up', signUp)
+authRoute.post('/sign-up', upload, signUp)
 
 export default authRoute;

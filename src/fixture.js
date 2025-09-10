@@ -9,13 +9,13 @@ dbConnect().catch((err) => {
     console.log(err)
 })
 
-const numberOfCourse = 10000
-const numberOfTeacher = 100
+const numberOfCourse = 10000;
+const numberOfTeacher = 100;
 const numberOfUsers = 50;
 const numberOfStocks = 200;
 
-const courseIds = []
-const teacherIds = []
+const courseIds = [];
+const teacherIds = [];
 
 for (let i = 0; i < numberOfCourse; i++) {
     let course = new courseModel({
@@ -57,10 +57,13 @@ const userIds = [];
 for (let i = 0; i < numberOfUsers; i++) {
     let user = new userModel({
         name: faker.person.fullName(),
-        username: faker.internet.userName().toLowerCase() + faker.string.alphanumeric(5),
+        username: faker.internet.username().toLowerCase() + faker.string.alphanumeric(5),
         email: faker.internet.email(),
         age: faker.number.int({ min: 18, max: 70 }),
-        role: faker.helpers.arrayElement(['member', 'admin', 'editor'])
+        role: faker.helpers.arrayElement(['member', 'admin', 'editor']),
+        // In a real app, you'd hash this password. For fixtures, plain text is fine.
+        password: 'password123',
+        avatar: faker.image.avatar(),
     });
     userIds.push(user._id);
     await user.save();

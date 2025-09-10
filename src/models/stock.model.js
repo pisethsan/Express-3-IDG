@@ -13,10 +13,10 @@ const stockSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    byUser: {
+    byUser: [{
         type: mongoose.Types.ObjectId,
         ref: 'Users'
-    }
+    }]
 }, {
     timestamps: true
 })

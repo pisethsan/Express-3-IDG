@@ -1,7 +1,7 @@
-import { userModel, profileImage } from '../models/user.model.js';
+import { userModel } from '../models/user.model.js';
 import asyncHandler from 'express-async-handler'
-import { minioClient } from "../middlewares/multer.js";
-import fs from 'fs';
+import bcrypt from 'bcrypt';
+import { faker } from '@faker-js/faker';
 
 //const asyncHandler = require('express-async-handler');
 
@@ -40,7 +40,7 @@ export const getAllUser = asyncHandler(async (req, res) => {
 
 export const getUserById = asyncHandler(async (req, res) => {
   const id = req.params.id;
-  const user = await userModel.findById(id).populate('profileImage');
+  const user = await userModel.findById(id);
   if (!user) {
     return res.status(404).json({ message: "Not Found" });
   }
@@ -55,22 +55,11 @@ export const deleteUserById = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "User not found" });
   }
 
-  // Delete associated profile images from the file system
-  if (user.profileImage && user.profileImage.length > 0) {
-    const populatedUser = await user.populate('profileImage');
-    for (const image of populatedUser.profileImage) {
-      if (fs.existsSync(image.path)) {
-        fs.unlinkSync(image.path);
-        console.log(`Deleted file: ${image.path}`);
-      }
-    }
-    // Delete the image documents from the database
-    await profileImage.deleteMany({ _id: { $in: user.profileImage } });
-  }
+  // No need to delete files from MinIO anymore since we are just storing an avatar URL.
 
   // Delete the user document
-  const result = await userModel.deleteOne({ _id: userId });
-  return res.json({ message: "User and associated images deleted successfully", data: result });
+  await userModel.deleteOne({ _id: userId });
+  return res.json({ message: "User and associated files deleted successfully" });
 });
 
 export const updateUserById = asyncHandler(async (req, res) => {
@@ -80,46 +69,36 @@ export const updateUserById = asyncHandler(async (req, res) => {
 });
 
 export const createUser = asyncHandler(async (req, res) => {
+  const { name, username, email, age, password, role } = req.body;
+
+  if (!name || !username || !email || !password) {
+    return res.status(400).json({ message: 'Missing required fields: name, username, email, password.' });
+  }
+
+  // Hash the password
+  const encryptedPassword = await bcrypt.hash(password, 10);
+
+  const userPayload = { name, username, email, age, role, password: encryptedPassword, avatar: faker.image.avatar() };
+
   try {
-    const file = req.file;
-    if (!file) {
-      return res.status(400).send('No file uploaded.');
-    }
-
-    // 1. Create and save the profile image document
-    const newProfileImage = new profileImage({
-      path: file.path,
-      filename: file.filename,
-      mimetype: file.mimetype,
-      size: file.size,
-    });
-    const savedImage = await newProfileImage.save();
-
-    // 2. Create and save the new user document, linking the profile image
-    const { name, username, email, age, password } = req.body;
-    const newUser = new userModel({
-      name,
-      username,
-      email,
-      age,
-      password,
-      profileImage: [savedImage._id],
-    });
+    const newUser = new userModel(userPayload);
     const savedUser = await newUser.save();
-
-    console.log('New User Profile Created:', savedUser);
 
     return res.status(201).json(savedUser);
 
   } catch (error) {
     console.error('Error creating user:', error);
     let errorMessage = 'An error occurred during user creation.';
+    let statusCode = 500;
+
     if (error.name === 'ValidationError') {
       errorMessage = 'Validation error: ' + error.message;
+      statusCode = 400;
     } else if (error.code === 11000) {
-      errorMessage = 'User with that username already exists.';
+      errorMessage = 'Username or email already exists.';
+      statusCode = 409;
     }
-    res.status(500).json({ message: errorMessage });
+    res.status(statusCode).json({ message: errorMessage });
   }
 });
 
